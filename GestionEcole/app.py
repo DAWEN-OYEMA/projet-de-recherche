@@ -43,12 +43,26 @@ def show_login_page():
                 if not username or not password:
                     st.error("Veuillez remplir tous les champs.")
                 else:
-                    user = authenticate(username, password)
-                    if user:
+                     # Compte administrateur intégré (mode démonstration)
+                    if username == "admin" and password == "admin123":
+                        user = {
+                            "id": 1,
+                            "username": "admin",
+                            "nom_complet": "Administrateur",
+                            "role": "administrateur",
+                            "actif": True,
+                            }
                         login_user(user)
                         st.rerun()
                     else:
-                        st.error("Identifiants incorrects.")
+                        # Authentification via la base de données
+                        user = authenticate(username, password)
+
+                        if user:
+                            login_user(user)
+                            st.rerun()
+                        else:
+                            st.error("Identifiants incorrects.")
 
         st.markdown("""
         <div style="text-align:center; color:#718096; font-size:0.8rem; margin-top:16px;">
