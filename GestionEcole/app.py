@@ -102,12 +102,8 @@ def main():
             init_db()
             st.session_state.db_initialized = True
         except Exception as e:
-            st.error(f"Erreur de connexion à la base de données : {e}")
-            st.info(
-                "Vérifiez que MySQL (WampServer) est démarré et que les "
-                "paramètres dans le fichier `.env` sont corrects."
-            )
-            st.stop()
+            st.warning("Base de données indisponible. Mode démonstration activé.")
+            st.session_state.db_initialized = False
 
     # Authentification
     if not is_authenticated():
