@@ -37,7 +37,7 @@ if not DATABASE_URL:
 
         # Si les secrets existent mais DATABASE_URL n'est pas défini,
         # utiliser SQLite sur Streamlit Cloud.
-        DATABASE_URL = "sqlite:///gestion_ecole.db"
+        
 
     except ImportError:
         # Exécution en local
