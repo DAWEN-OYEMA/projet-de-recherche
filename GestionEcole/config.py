@@ -32,16 +32,25 @@ def _get(key: str, default: str = ""):
 DATABASE_URL = _get("DATABASE_URL")
 
 if not DATABASE_URL:
-    DB_HOST = _get("DB_HOST", "localhost")
-    DB_PORT = _get("DB_PORT", "3306")
-    DB_USER = _get("DB_USER", "root")
-    DB_PASSWORD = _get("DB_PASSWORD", "")
-    DB_NAME = _get("DB_NAME", "gestion_ecole")
 
-    DATABASE_URL = (
-        f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-        "?charset=utf8mb4"
-    )
+    try:
+        import streamlit
+
+        # Exécution sur Streamlit Cloud
+        DATABASE_URL = "sqlite:///gestion_ecole.db"
+
+    except ImportError:
+        # Exécution en local : MySQL
+        DB_HOST = _get("DB_HOST", "localhost")
+        DB_PORT = _get("DB_PORT", "3306")
+        DB_USER = _get("DB_USER", "root")
+        DB_PASSWORD = _get("DB_PASSWORD", "")
+        DB_NAME = _get("DB_NAME", "gestion_ecole")
+
+        DATABASE_URL = (
+            f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+            "?charset=utf8mb4"
+        )
 
 # -------------------------------
 # Application
