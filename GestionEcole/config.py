@@ -1,56 +1,90 @@
 """
-Configuration de l'application via variables d'environnement (.env).
-Compatible WampServer (local) et Streamlit Community Cloud.
+Configuration de l'application.
+
+- En local : MySQL (WampServer)
+- Sur Streamlit Community Cloud : SQLite
 """
 
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Charger le fichier .env depuis la racine du projet
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
 
 
 def _get(key: str, default: str = "") -> str:
-    """Lit une variable depuis os.environ ou st.secrets (Streamlit Cloud)."""
+    """Lit une variable depuis .env ou Streamlit Secrets."""
     value = os.getenv(key)
     if value:
         return value
+
     try:
         import streamlit as st
-        return str(st.secrets.get(key, default))
+
+        if key in st.secrets:
+            return str(st.secrets[key])
+
     except Exception:
-        return default
+        pass
+
+    return default
 
 
-# ── Base de données MySQL ──────────────────────────────────────────
+# -------------------------------------------------
+# Détection de l'environnement
+# -------------------------------------------------
+
+IS_STREAMLIT = (
+    os.getenv("STREAMLIT_SERVER_PORT") is not None
+    or os.getenv("STREAMLIT_RUNTIME") is not None
+)
+
+# -------------------------------------------------
+# Paramètres MySQL (local)
+# -------------------------------------------------
+
 DB_HOST = _get("DB_HOST", "localhost")
 DB_PORT = _get("DB_PORT", "3306")
 DB_USER = _get("DB_USER", "root")
 DB_PASSWORD = _get("DB_PASSWORD", "")
 DB_NAME = _get("DB_NAME", "gestion_ecole")
 
-DATABASE_URL = (
-    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    f"?charset=utf8mb4"
-)
+# -------------------------------------------------
+# Choix automatique de la base de données
+# -------------------------------------------------
 
-# ── Application ────────────────────────────────────────────────────
+if IS_STREAMLIT:
+    DATABASE_URL = "sqlite:///gestion_ecole.db"
+else:
+    DATABASE_URL = (
+        f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        "?charset=utf8mb4"
+    )
+
+# -------------------------------------------------
+# Application
+# -------------------------------------------------
+
 APP_TITLE = _get("APP_TITLE", "Gestion Scolaire")
 APP_ICON = "🏫"
 SCHOOL_NAME = _get("SCHOOL_NAME", "École Primaire Excellence")
 
-# ── Chemins ────────────────────────────────────────────────────────
+# -------------------------------------------------
+# Dossiers
+# -------------------------------------------------
+
 ASSETS_DIR = BASE_DIR / "assets"
 PHOTOS_DIR = ASSETS_DIR / "photos"
 EXPORTS_DIR = BASE_DIR / "exports"
 
-# Créer les dossiers s'ils n'existent pas
 PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
 EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-# ── Rôles utilisateur ──────────────────────────────────────────────
+# -------------------------------------------------
+# Rôles
+# -------------------------------------------------
+
 ROLE_ADMIN = "administrateur"
 ROLE_ENSEIGNANT = "enseignant"
 ROLE_CAISSIER = "caissier"
@@ -61,10 +95,29 @@ ROLES = {
     ROLE_CAISSIER: "Caissier",
 }
 
-# Permissions par module
 PERMISSIONS = {
-    ROLE_ADMIN: ["dashboard", "eleves", "enseignants", "classes", "cours",
-                  "paiements", "notes", "rapports", "utilisateurs"],
-    ROLE_ENSEIGNANT: ["dashboard", "eleves", "classes", "cours", "notes"],
-    ROLE_CAISSIER: ["dashboard", "eleves", "paiements", "rapports"],
+    ROLE_ADMIN: [
+        "dashboard",
+        "eleves",
+        "enseignants",
+        "classes",
+        "cours",
+        "paiements",
+        "notes",
+        "rapports",
+        "utilisateurs",
+    ],
+    ROLE_ENSEIGNANT: [
+        "dashboard",
+        "eleves",
+        "classes",
+        "cours",
+        "notes",
+    ],
+    ROLE_CAISSIER: [
+        "dashboard",
+        "eleves",
+        "paiements",
+        "rapports",
+    ],
 }
